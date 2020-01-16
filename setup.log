@@ -1,0 +1,11 @@
+{"message":"Mounted businesses to /api/v1/businesses}","level":"info","label":"setup","timestamp":"2020-01-16T13:37:13.910Z"}
+{"message":"Mounted businesses to /api/v1/businesses}","level":"info","label":"setup","timestamp":"2020-01-16T13:37:50.287Z"}
+{"message":"API is listening on 127.0.0.1:8000","level":"info","label":"setup","timestamp":"2020-01-16T13:37:50.295Z"}
+{"message":"Shutting down server...","level":"info","label":"setup","timestamp":"2020-01-16T13:41:40.660Z"}
+{"message":"Mounted businesses to /api/v1/businesses}","level":"info","label":"setup","timestamp":"2020-01-16T13:44:30.512Z"}
+{"message":"API is listening on 127.0.0.1:8000","level":"info","label":"setup","timestamp":"2020-01-16T13:44:30.521Z"}
+{"message":"Shutting down server...","level":"info","label":"setup","timestamp":"2020-01-16T13:48:06.739Z"}
+{"message":"Mounted businesses to /api/v1/businesses}","level":"info","label":"setup","timestamp":"2020-01-16T13:49:39.311Z"}
+{"message":"API is listening on 127.0.0.1:8000","level":"info","label":"setup","timestamp":"2020-01-16T13:49:39.318Z"}
+{"message":"Mounted businesses to /api/v1/businesses}","level":"info","label":"setup","timestamp":"2020-01-16T13:59:01.353Z"}
+{"message":"API is listening on 127.0.0.1:8000","level":"info","label":"setup","timestamp":"2020-01-16T13:59:01.360Z"}
