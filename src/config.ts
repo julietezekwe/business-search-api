@@ -16,6 +16,8 @@ const config = {
   env: process.env.NODE_ENV,
   hostname: process.env.HOSTNAME,
   port: process.env.PORT,
+  radius: process.env.SEARCH_RADIUS,
+  base_url: process.env.BASE_URL,
   api_key: process.env.API_KEY,
   logs: {
     label: process.env.LOG_LABEL,

@@ -8,13 +8,13 @@ const config_1 = __importDefault(require("./config"));
 const logger_1 = __importDefault(require("./logger"));
 const app_1 = __importDefault(require("./app"));
 const Redis_1 = __importDefault(require("./utils/Redis"));
+const Yelp_1 = __importDefault(require("./utils/Yelp"));
 const configureContainer = () => {
     // Create IoC container for dependency injection
     const container = awilix_1.createContainer();
     // Register config and logger in the container
     container.register({
         config: awilix_1.asValue(config_1.default),
-        api_key: awilix_1.asValue(config_1.default.api_key),
         logger: awilix_1.asFunction(logger_1.default)
             .inject(() => ({
             label: config_1.default.logs.label,
@@ -28,6 +28,7 @@ const configureContainer = () => {
         ['services/*.js', awilix_1.Lifetime.SCOPED],
         ['controllers/*.js', awilix_1.Lifetime.SCOPED],
         ['routes/*.js', awilix_1.Lifetime.SINGLETON],
+        ['middlewares/*.js', awilix_1.Lifetime.SCOPED],
     ], {
         cwd: __dirname,
         formatName: 'camelCase',
@@ -40,6 +41,8 @@ const configureContainer = () => {
         redis: awilix_1.asClass(Redis_1.default)
             .inject(() => ({ container }))
             .singleton(),
+        yelp: awilix_1.asClass(Yelp_1.default)
+            .inject(() => ({ container })),
     });
     return container;
 };

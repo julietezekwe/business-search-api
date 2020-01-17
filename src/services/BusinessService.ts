@@ -1,18 +1,20 @@
 import autoBind from 'auto-bind';
+import { get, isEmpty } from 'lodash';
+import axios from 'axios';
 /**
    * Creates an instance of BusinessService.
    */
 class BusinessService {
   redis: any;
-  api_key: string;
+  yelp: any;
   /**
    * Creates an instance of BusinessService.
    * @param {object} param
    * @memberof BusinessService
    */
-  constructor({ api_key, redis }) {
+  constructor({ yelp, config, redis }) {
     this.redis = redis;
-    this.api_key = api_key;
+    this.yelp = yelp;
     autoBind(this);
   }
 
@@ -20,9 +22,11 @@ class BusinessService {
    * Retrieves top businesses and their details
    *@returns {object} - businesses
    */
-  async retrieveTopBusinesses() {
+  async retrieveTopBusinesses(body, category) {
+    const businesses = await this.yelp.getCoffeeRestaurant(body, category)
+   
     try {
-      return {}
+      return {...businesses}
     } catch (error) {
       throw error;
     }
@@ -33,12 +37,14 @@ class BusinessService {
    * Retrieves all businesses in groups
    *@returns {object} - group in counts
    */
-  async retrieveAllBusinesse() {
+  async retrieveAllBusinesse(body) {
     try {
-      return {};
+      const topBusinesses = await this.yelp.getBussinesses(body.points);
+      return topBusinesses;
     } catch (error) {
       throw error;
     }
   }
+
 }
 export default BusinessService;

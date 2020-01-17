@@ -6,6 +6,7 @@ import {
   import createLogger from './logger';
   import createApp from './app';
   import RedisClient from './utils/Redis';
+  import YelpClient from './utils/Yelp';
   
   
   const configureContainer = () => {
@@ -15,7 +16,6 @@ import {
     // Register config and logger in the container
     container.register({
       config: asValue(config),
-      api_key: asValue(config.api_key),
       logger: asFunction(createLogger)
         .inject(() => ({
           label: config.logs.label,
@@ -30,6 +30,7 @@ import {
       ['services/*.js', Lifetime.SCOPED],
       ['controllers/*.js', Lifetime.SCOPED],
       ['routes/*.js', Lifetime.SINGLETON],
+      ['middlewares/*.js', Lifetime.SCOPED],
     ], {
       cwd: __dirname,
       formatName: 'camelCase',
@@ -43,6 +44,8 @@ import {
       redis: asClass(RedisClient)
         .inject(() => ({ container }))
         .singleton(),
+      yelp: asClass(YelpClient)
+        .inject(() => ({ container })),
     });
     return container;
   };

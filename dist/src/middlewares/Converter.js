@@ -13,50 +13,39 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const auto_bind_1 = __importDefault(require("auto-bind"));
+const node_geocoder_1 = __importDefault(require("node-geocoder"));
 /**
-   * Creates an instance of BusinessService.
+   * Creates an instance of Converter.
    */
-class BusinessService {
-    /**
-     * Creates an instance of BusinessService.
-     * @param {object} param
-     * @memberof BusinessService
-     */
-    constructor({ yelp, config, redis }) {
-        this.redis = redis;
-        this.yelp = yelp;
+class Converter {
+    constructor() {
+        this.options = {
+            provider: 'google',
+            apiKey: 'AIzaSyBb9SjmLyHoIv15i5igN5AaFM0JPuhidns'
+        };
+        this.geocoder = node_geocoder_1.default(this.options);
         auto_bind_1.default(this);
     }
     /**
-     * Retrieves top businesses and their details
-     *@returns {object} - businesses
-     */
-    retrieveTopBusinesses(body, category) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const businesses = yield this.yelp.getCoffeeRestaurant(body, category);
-            try {
-                return Object.assign({}, businesses);
-            }
-            catch (error) {
-                throw error;
-            }
-        });
-    }
-    /**
-     * Retrieves all businesses in groups
-     *@returns {object} - group in counts
-     */
-    retrieveAllBusinesse(body) {
+ * converts a physical address to points
+ *@returns {Function} - next()
+ */
+    addressToPoints(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const topBusinesses = yield this.yelp.getBussinesses(body.points);
-                return topBusinesses;
+                const payload = yield this.geocoder.geocode(req.body.address);
+                req.body.points = {
+                    latitude: payload[0].latitude,
+                    longitude: payload[0].longitude,
+                };
+                return next();
             }
             catch (error) {
+                res.json({ success: false, message: 'there was an error' });
                 throw error;
             }
         });
     }
 }
-exports.default = BusinessService;
-//# sourceMappingURL=BusinessService.js.map
+exports.default = Converter;
+//# sourceMappingURL=Converter.js.map

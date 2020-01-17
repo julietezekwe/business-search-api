@@ -35,9 +35,13 @@ class BusinessesController {
      */
     getTopBusinesses(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            const payload = {
+                points: req.body.points
+            };
             try {
-                const businesses = yield this.businessService.retrieveTopBusinesses(req.location);
-                return res.status(200).json(businesses);
+                const topCoffeeShops = yield this.businessService.retrieveTopBusinesses(payload, 'coffee');
+                const topResturants = yield this.businessService.retrieveTopBusinesses(payload, 'resturant');
+                return res.status(200).json({ topCoffeeShops, topResturants });
             }
             catch (error) {
                 return res.json(error);
@@ -53,8 +57,8 @@ class BusinessesController {
     getAllBusinessesGroups(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const businessGroups = yield this.businessService.retrieveAllBusinesse();
-                return res.status(200).json(businessGroups);
+                const businessGroups = yield this.businessService.retrieveAllBusinesse(req.body);
+                return res.status(200).json({ businessGroups });
             }
             catch (error) {
                 return res.json(error);
