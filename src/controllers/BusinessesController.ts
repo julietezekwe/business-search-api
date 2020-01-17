@@ -6,7 +6,7 @@ import axios from 'axios'
    * Creates an instance of BusinessesController.
    */
 class BusinessesController {
-    businessService: any
+    private businessService: any
   /**
    * Creates an instance of BusinessesController.
    * @param {object} param
@@ -24,12 +24,10 @@ class BusinessesController {
    *@returns {object} - businesses
    */
   async getTopBusinesses(req: any, res: any) {
-      const payload = {
-          points: req.body.points
-      }
+    const { points } = req.body;
     try {
-      const topCoffeeShops = await this.businessService.retrieveTopBusinesses(payload, 'coffee');
-      const topResturants = await this.businessService.retrieveTopBusinesses(payload, 'resturant');
+      const topCoffeeShops = await this.businessService.retrieveTopBusinesses(points, 'coffee');
+      const topResturants = await this.businessService.retrieveTopBusinesses(points, 'resturant');
       return res.status(200).json({topCoffeeShops, topResturants});
     } catch (error) {
       return res.json(error);
@@ -43,9 +41,10 @@ class BusinessesController {
    *@returns {object} - count in groups
    */
   async getAllBusinessesGroups(req: any, res: any) {
-    try {
+    const { points } = req.body;
 
-      const businessGroups = await this.businessService.retrieveAllBusinesse(req.body);
+    try {
+      const businessGroups = await this.businessService.retrieveAllBusinesse(points);
       return res.status(200).json({businessGroups});
 
     } catch (error) {

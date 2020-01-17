@@ -1,18 +1,34 @@
 import axios from 'axios';
 import autoBind from 'auto-bind';
 import { get } from 'lodash';
+import { delay } from 'bluebird';
 
-class YelpClient {
-  yelp_api_key: any;
-  yelp_base_url: any;
-  web_client: any;
-  radius: number;
-  request: any;
+interface Points{
+  latitude: number;
+  longitude: number,
+}
+
+interface GroupInterface{
+  '45': number,
+  '34': number,
+  '23': number,
+  '12': number,
+  '01': number
+}
+
+interface YelpClientInterface{
+  getCoffeeRestaurant(points: Points, category: string): Promise<any>;
+  getBussinesses(points: Points): Promise<Array<string>>;
+}
+class YelpClient implements YelpClientInterface{
+  private yelp_api_key: any;
+  private yelp_base_url: any;
+  private radius: number;
+  private request: any;
 
   constructor({ config }) {
     this.yelp_api_key = config.api_key;
     this.yelp_base_url = config.base_url;
-    this.web_client = axios;
     this.radius = config.radius;
     this.request = axios.create({
         baseURL:  this.yelp_api_key,
@@ -22,46 +38,148 @@ class YelpClient {
       });
       autoBind(this);
   }
+    
+  /**
+   * conver degree to radian
+   *@returns {Number} - distance
+   */
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI/180)
+  }
 
+  /**
+   * Query helper 
+   * @param {object} params
+   *@returns {object} - query data
+   */
+ private async query (queryString: string): Promise<any> {
+    
+    try {
+      const businesses: any = await this.request.get(`${this.yelp_base_url}?${queryString}`);
+      return businesses.data;
+    } catch (error) {
+      console.error({
+        error: error.response.statusText,
+        data: error.response.data
+      });     
+    }
+  }
+ 
   /**
    * Retrieves top businesses and their details
    * @param {object} params
    *@returns {object} - query data
    */
-  async _query (params) {
+
+  private getGroupBusinesses (businessGroups: any): GroupInterface {
+    const groups: GroupInterface = {
+      '45': 0,
+      '34': 0,
+      '23': 0,
+      '12': 0,
+      '01': 0,
+    }
     try {
-      return await this.request.get(`${this.yelp_base_url}?${params}`);;
+     businessGroups.forEach(businessGroup => {
+    
+        let len: number = businessGroup.businesses.length - 1;
+
+        if(businessGroup.businesses[len].rating > 4.0){
+          groups['45'] += businessGroup.businesses.length;
+        } else if(businessGroup.businesses[0].rating <= 4.0 && businessGroup.businesses[len].rating > 3.0) {
+          groups['34'] += businessGroup.businesses.length;
+        }
+        else if(businessGroup.businesses[0].rating <= 3.0 && businessGroup.businesses[len].rating > 2.0) {
+          groups['23'] += businessGroup.businesses.length;
+        }
+        else if(businessGroup.businesses[0].rating <= 2.0 && businessGroup.businesses[len].rating > 1.0) {
+          groups['12'] += businessGroup.businesses.length;
+        }
+        else if(businessGroup.businesses[0].rating <= 1.0) {
+          groups['01'] += businessGroup.businesses.length;
+        }
+        else {
+          businessGroup.businesses.forEach(business =>{
+           if(business.rating > 4.0) groups['45'] ++;
+           else if(business.rating > 3.0) groups['34'] ++;
+           else if(business.rating > 2.0) groups['23'] ++;
+           else if(business.rating > 1.0) groups['12'] ++;
+           else  groups['01'] ++;
+        })
+      }
+      })
+      
+      return groups;
     } catch (error) {
-      // handle query error
-      // console.log(error)
-      console.log({
+      console.error({
         error: error.response.statusText,
         data: error.response.data
       });     
     }
   }
 
-  async getCoffeeRestaurant(body, category) {
+ /**
+   * calculates distance between points
+   *@returns {Number} - distance
+   */
+ private async calculateDistance(points: Array<Points>) {
+  try {
+    const point1: Points = points[0];
+    const point2: Points = points[1];
+      const Radius: number = 6371;
+      const dLat = this.deg2rad(get(point2, 'latitude') - get(point1, 'latitude'));
+      const dLon = this.deg2rad(get(point2, 'longitude') - get(point1, 'longitude')); 
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(this.deg2rad(get(point1, 'latitude'))) * Math.cos(this.deg2rad(get(point2, 'latitude'))) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+      const distance = Radius * c;
+      return distance;
+  } catch (error) {
+    console.error({
+      error: error.response.statusText,
+      data: error.response.data
+    }); 
+  }
+}
+ 
 
-    const query = `latitude=${get(body, 'points.latitude', 0)}&longitude=${get(body, 'points.longitude', 0)}&radius=${this.radius}&categories=${category}&limit=3&sort_by=rating`;
-    const businesses = await this._query(query);
+  /**
+   * Retrieves top businesses and their details
+   * @param {object} params
+   *@returns {object} - query data
+   */
 
-    const payload =get(businesses, 'data.businesses', []).map(async data => {
-        const { coordinates } = data;
-
-        let myDistance: any = await this.calculateDistance([body.points, coordinates]);
-        myDistance =  myDistance.toFixed(1);
-        let distance = (data.distance  / 1000).toFixed(1);
-        distance = myDistance === distance ? distance+ 'km' : distance + 'km !'
-        let payload = {
-            name: data.name + ' ' + distance,
-            image_url: data.image_url,
-            rating: data.rating,
-            categories: data.categories,
-        }
-        return payload
-    })
-    return(Promise.all(payload))
+  async getCoffeeRestaurant(points: Points, category: string) {
+    try {
+    
+          const query: string = `latitude=${get(points, 'latitude', 0)}&longitude=${get(points, 'longitude', 0)}&radius=${this.radius}&categories=${category}&limit=3&sort_by=rating`;
+          const businesses: any = await this.query(query);
+      
+          const payload: any =get(businesses, 'businesses', []).map(async data => {
+              const { coordinates } = data;
+      
+              let myDistance: any = await this.calculateDistance([points, coordinates]);
+              myDistance =  myDistance.toFixed(1);
+              let distance: any = (data.distance  / 1000).toFixed(1);
+              distance = myDistance === distance ? distance+ 'km' : distance + 'km !'
+              let payload = {
+                  name: data.name + ' ' + distance,
+                  image_url: data.image_url,
+                  rating: data.rating,
+                  categories: data.categories,
+              }
+              return payload
+          })
+          return(Promise.all(payload))
+      
+    } catch (error) {
+      console.error({
+        error: error.response.statusText,
+        data: error.response.data
+      });  
+    }
   }
 
   /**
@@ -69,93 +187,55 @@ class YelpClient {
    * @param {object} location
    *@returns {object} - businesses
    */
-  async getBussinesses({longitude, latitude}) {
-    const MAX_BUSINESS_PER_PAGE = 50;
-    let page = 0;
-    let done = false;
-    let report = {};
-    const queryString = `longitude=${longitude}&latitude=${latitude}&radius=${this.radius}&limit=${MAX_BUSINESS_PER_PAGE}&sort_by=rating`;
+  async getBussinesses(points: Points){
+   try {
+    const {longitude, latitude } = points;
+    const MAX_BUSINESS_PER_PAGE: number = 50;
+    const result = [];
+    const queryString = (offset = 0) => `longitude=${longitude}&latitude=${latitude}&radius=${this.radius}&limit=${MAX_BUSINESS_PER_PAGE}&sort_by=rating&offset=${offset}`;
+    const data = await this.query(queryString());
+    result.push(data);
+    const { total } = data;
+    let requestCount = Math.ceil(total / MAX_BUSINESS_PER_PAGE);
+    let remainingRequestCount = requestCount - 1;
+    let maximumLoop;
+    let offset = 50;
     
-    const _classifyBusinesses = (data, report) => {
-
-      console.log({start: data[0].rating, end: data[data.length - 1].rating});
-
-      return data.reduce((acc, business) => {
-        let rating = get(business, 'rating', '');
-        switch (true) {
-          case rating >= 4.5:
-            acc['45'] ? acc['45']++ : acc['45'] = 1;
-            break;
-          case rating >= 3.5:
-            acc['34'] ? acc['34']++ : acc['34'] = 1;
-            break;
-          case rating >= 2.5:
-            acc['23'] ? acc['23']++ : acc['23'] = 1;
-            break;
-          case rating >= 1.5:
-            acc['12'] ? acc['12']++ : acc['12'] = 1;
-            break;
-          default:
-            acc['01'] ? acc['01']++ : acc['01'] = 1;                  
-        }
-  
-        return acc;
-      }, report);
-    }
-
-    try {
-      while(!done) { 
-        const batch = await this._query(queryString + `&offset=${page}`);
-        if (batch.error) throw new Error(batch.error);
-        if(page >= 200/*page * MAX_BUSINESS_PER_PAGE >= data.total*/) done = true;
-        page++;
-        report = {...report, ..._classifyBusinesses(batch.data.businesses, report)};
-        
-        console.log({page, total: batch.data.total, report});
+    while(remainingRequestCount > 0){
+      remainingRequestCount > 5 ? maximumLoop = 5 : maximumLoop = remainingRequestCount
+      let promise = [];
+      for(let index = 0; index < maximumLoop; index++){
+        if(offset > 950) break;
+        const request = queryString(offset);
+        offset+=50;
+        promise.push(request);
       }
-    } catch (error) {
-      // Handle fetch error
-      console.log({ error })
+      if(!promise.length) break;
+      const resolved = await Promise.all(promise.map(p => {
+        return this.query(p);
+        
+      }))
+      remainingRequestCount -= 5;
+      delay(500)
+     
+      result.push(...resolved);
     }
-    
-    return report;
+
+    let groupBusinesses: any = this.getGroupBusinesses(result);
+    const businessGroups = [];
+    for (let [key, value] of Object.entries(groupBusinesses)) {
+     if(value) businessGroups.push(`${value} businesses between ${key.split('')[0]} and ${key.split('')[1]}`)
+    }
+    return businessGroups;
+   
+   } catch (error) {
+    console.error({
+      error: error.response.statusText,
+      data: error.response.data
+    });  
+   } 
   }
 
-    
-  /**
-   * calculates distance between points
-   *@returns {Number} - distance
-   */
-  async calculateDistance(points: Array<object>) {
-    try {
-      const point1 = points[0];
-      const point2: object = points[1];
-  
-  
-        const Radius = 6371;
-        const dLat = await this._deg2rad(get(point2, 'latitude') - get(point1, 'latitude'));
-        const dLon = await this._deg2rad(get(point2, 'longitude') - get(point1, 'longitude')); 
-        const a = 
-          Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(await this._deg2rad(get(point1, 'latitude'))) * Math.cos(await this._deg2rad(get(point2, 'latitude'))) * 
-          Math.sin(dLon/2) * Math.sin(dLon/2)
-          ; 
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-        const distance = Radius * c; // Distance in km
-        return distance;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-    
-   /**
-   * conver degree to radian
-   *@returns {Number} - distance
-   */
-  async _deg2rad(deg) {
-    return deg * (Math.PI/180)
-  }
 }
 
 export default YelpClient;

@@ -6,7 +6,7 @@
   "scripts": {
     "build-ts": "tsc",
     "postinstall": "npm run build-ts",
-    "watch": "./node_modules/.bin/tsc && nodemon",
+    "watch": "nodemon",
     "start": "node ./dist/src/bin/www.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node ./dist/src/bin/www.js"

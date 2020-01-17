@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -33,20 +24,16 @@ class BusinessesController {
      * @param {object} res
      *@returns {object} - businesses
      */
-    getTopBusinesses(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const payload = {
-                points: req.body.points
-            };
-            try {
-                const topCoffeeShops = yield this.businessService.retrieveTopBusinesses(payload, 'coffee');
-                const topResturants = yield this.businessService.retrieveTopBusinesses(payload, 'resturant');
-                return res.status(200).json({ topCoffeeShops, topResturants });
-            }
-            catch (error) {
-                return res.json(error);
-            }
-        });
+    async getTopBusinesses(req, res) {
+        const { points } = req.body;
+        try {
+            const topCoffeeShops = await this.businessService.retrieveTopBusinesses(points, 'coffee');
+            const topResturants = await this.businessService.retrieveTopBusinesses(points, 'resturant');
+            return res.status(200).json({ topCoffeeShops, topResturants });
+        }
+        catch (error) {
+            return res.json(error);
+        }
     }
     /**
      * Retrieves all businesses details in gropus
@@ -54,16 +41,15 @@ class BusinessesController {
      * @param {object} res
      *@returns {object} - count in groups
      */
-    getAllBusinessesGroups(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const businessGroups = yield this.businessService.retrieveAllBusinesse(req.body);
-                return res.status(200).json({ businessGroups });
-            }
-            catch (error) {
-                return res.json(error);
-            }
-        });
+    async getAllBusinessesGroups(req, res) {
+        const { points } = req.body;
+        try {
+            const businessGroups = await this.businessService.retrieveAllBusinesse(points);
+            return res.status(200).json({ businessGroups });
+        }
+        catch (error) {
+            return res.json(error);
+        }
     }
 }
 exports.default = BusinessesController;
