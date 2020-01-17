@@ -12,8 +12,7 @@ class BusinessService {
    * @param {object} param
    * @memberof BusinessService
    */
-  constructor({ yelp, config, redis }) {
-    this.redis = redis;
+  constructor({ yelp, config }) {
     this.yelp = yelp;
     autoBind(this);
   }

@@ -5,7 +5,6 @@ import {
   import config from './config';
   import createLogger from './logger';
   import createApp from './app';
-  import RedisClient from './utils/Redis';
   import YelpClient from './utils/Yelp';
   
   
@@ -39,9 +38,6 @@ import {
     // Register the express application and server last (it will auto-mount routers)
     container.register({
       app: asFunction(createApp)
-        .inject(() => ({ container }))
-        .singleton(),
-      redis: asClass(RedisClient)
         .inject(() => ({ container }))
         .singleton(),
       yelp: asClass(YelpClient)

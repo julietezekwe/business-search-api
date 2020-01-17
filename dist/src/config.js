@@ -25,11 +25,7 @@ const config = {
     },
     api: {
         prefix: process.env.API_PREFIX,
-    },
-    redis: {
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT,
-    },
+    }
 };
 exports.default = config;
 //# sourceMappingURL=config.js.map

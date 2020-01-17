@@ -7,7 +7,6 @@ const awilix_1 = require("awilix");
 const config_1 = __importDefault(require("./config"));
 const logger_1 = __importDefault(require("./logger"));
 const app_1 = __importDefault(require("./app"));
-const Redis_1 = __importDefault(require("./utils/Redis"));
 const Yelp_1 = __importDefault(require("./utils/Yelp"));
 const configureContainer = () => {
     // Create IoC container for dependency injection
@@ -36,9 +35,6 @@ const configureContainer = () => {
     // Register the express application and server last (it will auto-mount routers)
     container.register({
         app: awilix_1.asFunction(app_1.default)
-            .inject(() => ({ container }))
-            .singleton(),
-        redis: awilix_1.asClass(Redis_1.default)
             .inject(() => ({ container }))
             .singleton(),
         yelp: awilix_1.asClass(Yelp_1.default)
