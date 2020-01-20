@@ -8,6 +8,7 @@ const config_1 = __importDefault(require("./config"));
 const logger_1 = __importDefault(require("./logger"));
 const app_1 = __importDefault(require("./app"));
 const Yelp_1 = __importDefault(require("./utils/Yelp"));
+const Redis_1 = __importDefault(require("./utils/Redis"));
 const configureContainer = () => {
     // Create IoC container for dependency injection
     const container = awilix_1.createContainer();
@@ -38,7 +39,11 @@ const configureContainer = () => {
             .inject(() => ({ container }))
             .singleton(),
         yelp: awilix_1.asClass(Yelp_1.default)
-            .inject(() => ({ container })),
+            .inject(() => ({ container }))
+            .singleton(),
+        redis: awilix_1.asClass(Redis_1.default)
+            .inject(() => ({ container }))
+            .singleton(),
     });
     return container;
 };

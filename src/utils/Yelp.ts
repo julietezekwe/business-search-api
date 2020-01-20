@@ -27,8 +27,8 @@ class YelpClient implements YelpClientInterface{
   private request: any;
 
   constructor({ config }) {
-    this.yelp_api_key = config.api_key;
-    this.yelp_base_url = config.base_url;
+    this.yelp_api_key = config.yelpClient.api_key;
+    this.yelp_base_url = config.yelpClient.base_url;
     this.radius = config.radius;
     this.request = axios.create({
         baseURL:  this.yelp_api_key,
@@ -129,12 +129,14 @@ class YelpClient implements YelpClientInterface{
       const Radius: number = 6371;
       const dLat = this.deg2rad(get(point2, 'latitude') - get(point1, 'latitude'));
       const dLon = this.deg2rad(get(point2, 'longitude') - get(point1, 'longitude')); 
+      const lat1 = this.deg2rad(get(point1, 'latitude'));
+      const lat2 = this.deg2rad(get(point2, 'latitude'));
       const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(this.deg2rad(get(point1, 'latitude'))) * Math.cos(this.deg2rad(get(point2, 'latitude'))) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-      const distance = Radius * c;
+        Math.pow(Math.sin(dLat/2), 2) +
+        Math.pow(Math.sin(dLon/2), 2) *
+        Math.cos(lat1) * Math.cos(lat2);
+
+      const distance = 2 * Radius * Math.asin(Math.sqrt(a)); 
       return distance;
   } catch (error) {
     console.error({
@@ -143,8 +145,6 @@ class YelpClient implements YelpClientInterface{
     }); 
   }
 }
- 
-
   /**
    * Retrieves top businesses and their details
    * @param {object} params

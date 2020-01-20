@@ -9,10 +9,11 @@ const node_geocoder_1 = __importDefault(require("node-geocoder"));
    * Creates an instance of Converter.
    */
 class Converter {
-    constructor() {
+    constructor({ redis, config }) {
+        this.redis = redis;
         this.options = {
-            provider: 'google',
-            apiKey: 'AIzaSyBb9SjmLyHoIv15i5igN5AaFM0JPuhidns'
+            provider: config.geocoder.provider,
+            apiKey: config.geocoder.api_key,
         };
         this.geocoder = node_geocoder_1.default(this.options);
         auto_bind_1.default(this);
@@ -22,16 +23,24 @@ class Converter {
  *@returns {Function} - next()
  */
     async addressToPoints(req, res, next) {
+        const { address } = req.body;
+        const key = address.replace(' ', '').toLowerCase();
         try {
-            const payload = await this.geocoder.geocode(req.body.address);
-            req.body.points = {
-                latitude: payload[0].latitude,
-                longitude: payload[0].longitude,
-            };
+            let payload = await this.redis.getObject('Converter', key);
+            if (!Object.entries(payload).length) {
+                const data = await this.geocoder.geocode(address);
+                if (!data.length) {
+                    return res.status(404).json({ success: false, message: 'Address not found' });
+                }
+                let { longitude, latitude } = data[0];
+                payload = { longitude, latitude };
+                await this.redis.setObject('Converter', key, payload);
+            }
+            req.body.points = payload;
             return next();
         }
         catch (error) {
-            res.json({ success: false, message: 'there was an error' });
+            res.status(500).json({ success: false, message: 'there was an error' });
             throw error;
         }
     }

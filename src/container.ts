@@ -6,12 +6,12 @@ import {
   import createLogger from './logger';
   import createApp from './app';
   import YelpClient from './utils/Yelp';
-  
-  
+  import RedisClient from './utils/Redis';
+
   const configureContainer = () => {
     // Create IoC container for dependency injection
     const container = createContainer();
-  
+
     // Register config and logger in the container
     container.register({
       config: asValue(config),
@@ -23,7 +23,7 @@ import {
         }))
         .singleton(),
     });
-  
+
     // Auto-register repositories, services, controllers and routes
     container.loadModules([
       ['services/*.js', Lifetime.SCOPED],
@@ -34,17 +34,20 @@ import {
       cwd: __dirname,
       formatName: 'camelCase',
     });
-  
+
     // Register the express application and server last (it will auto-mount routers)
     container.register({
       app: asFunction(createApp)
         .inject(() => ({ container }))
         .singleton(),
       yelp: asClass(YelpClient)
-        .inject(() => ({ container })),
+        .inject(() => ({ container }))
+        .singleton(),
+      redis: asClass(RedisClient)
+        .inject(() => ({ container }))
+        .singleton(),
     });
     return container;
   };
-  
-  export default configureContainer;
-  
+
+export default configureContainer;

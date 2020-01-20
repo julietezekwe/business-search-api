@@ -9,8 +9,8 @@ const lodash_1 = require("lodash");
 const bluebird_1 = require("bluebird");
 class YelpClient {
     constructor({ config }) {
-        this.yelp_api_key = config.api_key;
-        this.yelp_base_url = config.base_url;
+        this.yelp_api_key = config.yelpClient.api_key;
+        this.yelp_base_url = config.yelpClient.base_url;
         this.radius = config.radius;
         this.request = axios_1.default.create({
             baseURL: this.yelp_api_key,
@@ -110,11 +110,12 @@ class YelpClient {
             const Radius = 6371;
             const dLat = this.deg2rad(lodash_1.get(point2, 'latitude') - lodash_1.get(point1, 'latitude'));
             const dLon = this.deg2rad(lodash_1.get(point2, 'longitude') - lodash_1.get(point1, 'longitude'));
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(this.deg2rad(lodash_1.get(point1, 'latitude'))) * Math.cos(this.deg2rad(lodash_1.get(point2, 'latitude'))) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const distance = Radius * c;
+            const lat1 = this.deg2rad(lodash_1.get(point1, 'latitude'));
+            const lat2 = this.deg2rad(lodash_1.get(point2, 'latitude'));
+            const a = Math.pow(Math.sin(dLat / 2), 2) +
+                Math.pow(Math.sin(dLon / 2), 2) *
+                    Math.cos(lat1) * Math.cos(lat2);
+            const distance = 2 * Radius * Math.asin(Math.sqrt(a));
             return distance;
         }
         catch (error) {
